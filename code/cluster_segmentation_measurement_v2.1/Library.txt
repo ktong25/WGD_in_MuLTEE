@@ -1,0 +1,69 @@
+// Helpful functions
+// Kai Tong, updated on 20230724
+
+// Close all windows
+function close_everything() {
+	// Close all images
+	run("Close All"); 
+	// Close all non-image windows
+	windows = getList("window.titles");
+	if (windows.length > 0) {
+		for (i = 0; i < windows.length; i++) {
+			selectWindow(windows[i]); 
+			run("Close");
+		}
+	}
+}
+
+// Clear all selections
+function clear_selection() { 
+	roiManager("deselect"); run("Select None"); roiManager("show none");
+}
+
+// Print message in Log window and save/append it to <step>_log.txt file in project directory
+// <step>_log.txt file will be automatically created if it does not exist
+function print_and_save_log(content) {
+	print(content);
+	File.append(content, proj + File.separator + step + "_log.txt");
+}
+
+// Strip suffix from the right of a string
+function rstrip(string, suffix) {
+	return substring(string, 0, lengthOf(string) - lengthOf(suffix));	
+}
+
+// Check if a value is in an array
+function isin(x, arr) {
+	for (i = 0; i < arr.length; i++)
+		if (x == arr[i])
+			return true; 
+	return false; 
+}
+
+// Get the first index (0-based) of a value in an array, if not found then return -1
+function index(x, arr) { 
+	for (i = 0; i < arr.length; i++)
+		if (x == arr[i])
+			return i;
+	return -1;
+}
+
+// Convert true/false to "True"/"False"
+function tf(n) { 
+	if (n) return "True";
+	else return "False";
+}
+
+// Rename ROIs in ROI manager to 1-n
+function rename_rois() {
+	for (r = 0; r < roiManager("count"); r++) {
+		roiManager("select", r);
+		roiManager("rename", r+1);
+	}
+	clear_selection();
+}
+
+// Calculate percentage of a in b, rounding to certain decimal place (n>=0)
+function percentage(a, b, n) {
+	return round(a / b * pow(10, n+2)) / pow(10, n);
+}
