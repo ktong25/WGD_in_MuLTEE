@@ -1,0 +1,15 @@
+"DS_defreq_mode","DS_dACN_abs","Mut_num"
+"Gain",1,12
+"Gain",2,1
+"Loss",1,17
+"Loss",2,3
+"LOH",0,2
+"LOH",1,2
+"Increase",0,72
+"Increase",1,50
+"Increase",2,1
+"Decrease",0,21
+"Decrease",1,64
+"Decrease",2,1
+"Same",0,767
+"Same",1,5
