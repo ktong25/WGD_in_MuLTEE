@@ -1,0 +1,150 @@
+---
+title: "Stat"
+author: "Kai Tong"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+**Setup**
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+library(dplyr)
+#library(DescTools)
+#library(afex)
+
+setwd("~/Documents/projects/R_data_analysis/cluster_size/20230926_all")
+rm(list=ls())
+```
+
+# Prepare data 
+
+```{r}
+# data <- readRDS("data.rds") %>%
+#   dplyr::filter(Time == "24h") %>%
+#   tidyr::unite(col = "Strain", Condition, Line, EvoTime, sep = "_", remove = FALSE) %>%
+#   dplyr::relocate(Strain, .before = Condition)
+data_summary <- readRDS("data_summary.rds") %>%
+  dplyr::filter(Time == "24h") %>%
+  tidyr::unite(col = "Strain", Condition, Line, EvoTime, sep = "_", remove = FALSE) %>%
+  dplyr::relocate(Strain, .before = Condition)
+```
+
+# Compare t0 and t200
+
+```{r}
+# # Calculate fold change in cell volume from t0 to t200
+# x <- data_summary %>% 
+#   dplyr::filter(EvoTime == "t0") %>%
+#   dplyr::pull(Mean_volume)
+# PM_t0 <- x[1]
+# PA_t0 <- x[2]
+# y <- data_summary %>%
+#   dplyr::filter(EvoTime == "t200") %>%
+#   dplyr::group_by(Condition) %>%
+#   dplyr::summarize(Mean_volume.mean = mean(Mean_volume)) %>%
+#   dplyr::pull(Mean_volume.mean)
+# PM_t200 <- y[1]
+# PA_t200 <- y[2]
+# PM_t200 / PM_t0
+# PA_t200 / PA_t0
+```
+
+```{r}
+# # One-way ANOVA with Dunnett's test
+# # If contain a control group and determine if the tested groups are significantly different from the control group
+# # References: Bozdag2023, https://www.r-bloggers.com/2021/08/how-to-perform-dunnetts-test-in-r/, https://www.statology.org/dunnetts-test-r/
+# for (condition in c("PM", "PA")) {
+#   print(condition)
+#   df <- data %>%
+#     dplyr::filter(Condition == condition & EvoTime %in% c("t0", "t200")) %>%
+#     dplyr::arrange(EvoTime)
+#   strains <- unique(df$Strain)
+#   df$Strain <- factor(df$Strain, levels = strains)
+#   result <- aov(Volume ~ Strain, data = df)
+#   summary(result) %>% print()
+#   DunnettTest(x = df$Volume, g = df$Strain) %>% print()
+# }
+```
+
+```{r}
+# One-sample t-test
+for (condition in c("PM", "PA")) {
+  print(condition)
+  t0 <- data_summary %>%
+    dplyr::filter(Condition == condition & EvoTime == "t0") %>%
+    dplyr::pull(Weighted_mean_radius)
+  t200s <- data_summary %>%
+    dplyr::filter(Condition == condition & EvoTime == "t200")
+  result <- t.test(Weighted_mean_radius ~ 1, data = t200s, mu = t0)
+  print(result)
+}
+```
+
+# Comparing t200, t400, t600 and t1000
+
+```{r}
+# # Two-way ANOVA
+# 
+# # PM
+# condition <- "PM"
+# df <- data %>%
+#   dplyr::filter(Condition == condition & EvoTime != "t0")
+# result <- aov(Volume ~ EvoTime * Line, data = df)
+# summary(result) %>% print()
+# 
+# # PA
+# condition <- "PA"
+# df <- data %>%
+#   dplyr::filter(Condition == condition & EvoTime %in% c("t400", "t600", "t1000"))
+# result <- aov(Volume ~ EvoTime * Line, data = df)
+# summary(result) %>% print()
+```
+
+```{r}
+# # Two-way ANOVA (using mean values)
+# # Not show p-value, because there is only one data point per combination of EvoTime and Line
+# 
+# # PM
+# condition <- "PM"
+# df <- data_summary %>%
+#   dplyr::filter(Condition == condition & EvoTime != "t0")
+# result <- aov(Mean_volume ~ EvoTime * Line, data = df)
+# summary(result) %>% print()
+# 
+# # PA
+# condition <- "PA"
+# df <- data_summary %>%
+#   dplyr::filter(Condition == condition & EvoTime %in% c("t400", "t600", "t1000"))
+# result <- aov(Mean_volume ~ EvoTime * Line, data = df)
+# summary(result) %>% print()
+```
+
+```{r}
+# One-way ANOVA
+
+# PM
+condition <- "PM"
+df <- data_summary %>%
+  dplyr::filter(Condition == condition & EvoTime != "t0")
+result <- aov(Weighted_mean_radius ~ EvoTime, data = df)
+summary(result) %>% print()
+
+# PA
+condition <- "PA"
+df <- data_summary %>%
+  dplyr::filter(Condition == condition)
+result <- aov(Weighted_mean_radius ~ EvoTime, data = df)
+summary(result) %>% print()
+# Test for increase by linear regression
+df$EvoTime2 <- factor(df$EvoTime, 
+                      levels = c("t0", "t200", "t400", "t600", "t1000"), 
+                      labels = c(0, 200, 400, 600, 1000)) %>% as.numeric()
+result <- lm(Weighted_mean_radius ~ EvoTime2, data = df)
+summary(result) %>% print()
+```
+
+
